@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body,
+        input {
+            font-family: monospace;
+            font-size: 18px;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input {
+            display: inline-block;
+            width: 2ch;
+            padding: 1ch;
+            text-align: right;
+            border: 0;
+            box-shadow: inset 0 0 0 1px gray;
+        }
+        .row:not(.col) {
+            display: block;
+            margin-left: 12ch
+        }
+        .col {
+            display: inline-block;
+        }
+        #sb {
+            position: absolute;
+            top: 5ch;
+            font-size: larger;
+        }
+        #sl {
+            position: absolute;
+            top: 20ch;
+        }
+    </style>
+</head>
+<body>
+    <div id="sb"></div>
+    <pre id="sl">
+ 1:   0
+ 2:   3
+ 3:  10
+ 4:  15
+ 5:   5*
+ 6:  30
+ 7:  70
+ 8:  90
+ 9:  40*
+10: 120
+11: 150
+12:  80*
+13: 190
+14: 230</pre>
+<div id="db" onclick="this.innerText = rd()" style="background-color: silver;margin-bottom:1ch">00</div>
+    <input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="col"><input type="number" class="col"><input type="number" class="col"><input type="number" class="col row"><input type="number" class="col"><input type="number" class="col"><input type="number" class="col"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row"><input type="number" class="row">
+<script>
+    var inputs = document.querySelectorAll('input');
+    var rows = document.querySelectorAll('.row');
+    var cols = document.querySelectorAll('.col');
+    var levelS = [0,3,10,15,5,30,70,90,40,120,150,80,190,230];
+    var dn = 1;
+    var df = [1,2,3,4,5,8];
+
+    inputs.forEach(input => {
+        input.addEventListener('input', checkS);
+    });
+
+    function rd() {
+        let dt = '';
+        let ds = 0;
+        if (dn == 6) dn = 1;
+        for (let i = 0; i < dn; i++) {
+            shuffle(df);
+            dt += df[1] + ', ';
+            ds += df[1];
+        }
+        dn++;
+        return dt + ' = ' + ds;
+    }
+
+    function checkS() {
+        let s = 0;
+        s += checkS2(rows);
+        s += checkS2(cols);
+        sb.innerText = s
+    }
+
+    function checkS2(rc) {
+        let point = -1;
+        let level = -1;
+        let rcs = 0;
+        rc.forEach(r => {
+            const v = r.value === '' ? point : (r.value * 1);
+            if (v >= point) {
+                level++;
+            } else {
+                rcs += levelS[level];
+                level = 0;
+            }
+            point = v;
+        });
+        if (level > 0) rcs += levelS[level];
+        return rcs;
+    }
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]]; // swap
+        }
+    }
+</script>
+</body>
+</html>
