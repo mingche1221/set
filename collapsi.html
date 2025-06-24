@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Collapsi（坍塌）遊戲</title>
+    <style>
+        body { font-family: sans-serif; background: #f8f8f8; }
+        #board { display: grid; grid-template: repeat(4, 60px) / repeat(4, 60px); gap: 6px; margin: 30px auto; width: max-content; }
+        .cell {
+            width: 60px; height: 60px; background: #fff; border: 1px solid #aaa; font-size: 1.5em;
+            display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .collapsed { background: #333; color: #333; cursor: not-allowed; }
+        .red-player { background: #e44 !important; color: #fff !important; }
+        .blue-player { background: #2196f3 !important; color: #fff !important; }
+        .move-path { background: #ffe082 !important; color: #222 !important; }
+        #info { margin: 20px auto; width: 260px; text-align: center; }
+        button { margin: 10px; }
+    </style>
+</head>
+<body>
+    <div id="info"></div>
+    <div id="board"></div>
+    <div style="text-align:center;">
+        <!-- <button onclick="restart()">重新開始</button> -->
+        <button id="finishMoveBtn" onclick="finishMove()">完成移動</button>
+        <button id="cancelMoveBtn" onclick="cancelMove()">取消移動</button>
+    </div>
+<script>
+const BOARD_SIZE = 4;
+const TILE_COUNTS = {0:2, 1:4, 2:4, 3:4, 4:2};
+let board, collapsed, pieces, turn, movePath, gameOver, firstMove, winner;
+
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+function initBoard() {
+    // Create tiles
+    let tiles = [];
+    for (let n in TILE_COUNTS) for (let i=0;i<TILE_COUNTS[n];i++) tiles.push(Number(n));
+    shuffle(tiles);
+    board = [];
+    for (let i=0;i<BOARD_SIZE*BOARD_SIZE;i++) board.push(tiles[i]);
+    collapsed = Array(BOARD_SIZE*BOARD_SIZE).fill(false);
+}
+
+function posToIdx([r,c]) { return ((r+BOARD_SIZE)%BOARD_SIZE)*BOARD_SIZE + ((c+BOARD_SIZE)%BOARD_SIZE); }
+function idxToPos(idx) { return [Math.floor(idx/BOARD_SIZE), idx%BOARD_SIZE]; }
+
+function findZeros() {
+    let zeros = [];
+    for (let i=0;i<board.length;i++) if (board[i]===0) zeros.push(i);
+    return zeros;
+}
+
+function initPieces() {
+    let zeros = findZeros();
+    shuffle(zeros);
+    pieces = [
+        {color:'red', pos: idxToPos(zeros[0])},
+        {color:'blue', pos: idxToPos(zeros[1])}
+    ];
+}
+
+function restart() {
+    initBoard();
+    initPieces();
+    turn = Math.random()<0.5?0:1;
+    movePath = [];
+    gameOver = false;
+    firstMove = [true, true];
+    winner = null;
+    render();
+    updateInfo();
+}
+
+function render() {
+    const boardDiv = document.getElementById('board');
+    boardDiv.innerHTML = '';
+    for (let r=0;r<BOARD_SIZE;r++) {
+        for (let c=0;c<BOARD_SIZE;c++) {
+            let idx = posToIdx([r,c]);
+            let cell = document.createElement('div');
+            cell.className = 'cell';
+            if (collapsed[idx]) cell.classList.add('collapsed');
+            // 以背景色顯示玩家
+            let pieceHere = pieces.find(p=>p.pos[0]===r && p.pos[1]===c);
+            if (pieceHere) {
+                if (pieceHere.color === 'red') cell.classList.add('red-player');
+                if (pieceHere.color === 'blue') cell.classList.add('blue-player');
+            }
+            // 以背景色顯示移動路徑（不含起點）
+            if (movePath.length > 1) {
+                for (let i = 1; i < movePath.length; i++) {
+                    if (movePath[i][0] === r && movePath[i][1] === c) {
+                        cell.classList.add('move-path');
+                    }
+                }
+            }
+            if (!collapsed[idx]) cell.textContent = board[idx];
+            cell.onclick = ()=>cellClick(r,c);
+            boardDiv.appendChild(cell);
+        }
+    }
+}
+
+function updateInfo(msg) {
+    let info = document.getElementById('info');
+    if (gameOver) {
+        info.innerHTML = `<b>遊戲結束！${winner==='draw'?'平手':(winner==='red'?'紅':'藍')+'方獲勝！'}</b>`;
+    } else {
+        let color = turn===0?'紅':'藍';
+        let colorStyle = turn===0?'#e44':'#2196f3';
+        info.innerHTML = `輪到 <span style="color:${colorStyle}">${color}</span> 方移動<br>`;
+        // 不再顯示路徑
+        if (msg) info.innerHTML += `<br>${msg}`;
+    }
+}
+
+function cellClick(r, c) {
+    if (gameOver) return;
+    let player = pieces[turn];
+    let opp = pieces[1-turn];
+    let idx = posToIdx([r,c]);
+    if (collapsed[idx]) return;
+
+    // 如果還沒開始路徑，直接當作起點，且允許直接點鄰格
+    if (movePath.length === 0) {
+        // 只允許從自己棋子出發的鄰格開始
+        let pr = player.pos[0], pc = player.pos[1];
+        let dr = (r-pr+BOARD_SIZE)%BOARD_SIZE;
+        let dc = (c-pc+BOARD_SIZE)%BOARD_SIZE;
+        let isAdj = (dr===1&&dc===0)||(dr===0&&dc===1)||(dr===0&&dc===BOARD_SIZE-1)||(dr===BOARD_SIZE-1&&dc===0);
+        // 不能點自己、不能點對手、不能點已坍塌
+        if ((pr===r && pc===c) || (opp.pos[0]===r && opp.pos[1]===c)) return;
+        if (!isAdj) return;
+        movePath = [[player.pos[0], player.pos[1]], [r, c]];
+        render();
+        updateInfo();
+        return;
+    }
+    // 已經有路徑，照原本規則延伸
+    let last = movePath[movePath.length-1];
+    let dr = (r-last[0]+BOARD_SIZE)%BOARD_SIZE;
+    let dc = (c-last[1]+BOARD_SIZE)%BOARD_SIZE;
+    let isAdj = (dr===1&&dc===0)||(dr===0&&dc===1)||(dr===0&&dc===BOARD_SIZE-1)||(dr===BOARD_SIZE-1&&dc===0);
+    if (!isAdj) return;
+    if (movePath.some(([rr,cc])=>rr===r&&cc===c)) return;
+    if (opp.pos[0]===r && opp.pos[1]===c) return;
+    if (collapsed[idx]) return;
+    movePath.push([r,c]);
+    render();
+    updateInfo();
+}
+
+function canMove(playerIdx) {
+    // Try all possible paths from current position
+    let player = pieces[playerIdx];
+    let opp = pieces[1-playerIdx];
+    let startIdx = posToIdx(player.pos);
+    if (collapsed[startIdx]) return false;
+    let steps = board[startIdx];
+    if (firstMove[playerIdx]) steps = 1; // can be 1~4, but we check for at least one
+    let found = false;
+    function dfs(pos, path, remain) {
+        if (remain===0) { found=true; return; }
+        let dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+        for (let [dr,dc] of dirs) {
+            let nr = (pos[0]+dr+BOARD_SIZE)%BOARD_SIZE;
+            let nc = (pos[1]+dc+BOARD_SIZE)%BOARD_SIZE;
+            let idx = posToIdx([nr,nc]);
+            if (collapsed[idx]) continue;
+            if (opp.pos[0]===nr && opp.pos[1]===nc) continue;
+            if (path.some(([rr,cc])=>rr===nr&&cc===nc)) continue;
+            dfs([nr,nc],[...path,[nr,nc]],remain-1);
+            if (found) return;
+        }
+    }
+    for (let n=1;n<=4;n++) {
+        if (firstMove[playerIdx]) {
+            dfs(player.pos,[player.pos],n);
+            if (found) return true;
+        } else {
+            dfs(player.pos,[player.pos],steps);
+            return found;
+        }
+    }
+    return false;
+}
+
+function finishMove() {
+    if (movePath.length<2) return;
+    let player = pieces[turn];
+    let opp = pieces[1-turn];
+    let start = movePath[0];
+    let end = movePath[movePath.length-1];
+    let startIdx = posToIdx(start);
+    let steps = movePath.length-1;
+    // First move: must move 1~4
+    if (firstMove[turn]) {
+        if (steps<1||steps>4) { updateInfo('第一回合只能移動 1~4 步'); return; }
+        firstMove[turn]=false;
+    } else {
+        let need = board[startIdx];
+        if (steps!==need) { updateInfo(`必須剛好移動 ${need} 步`); return; }
+    }
+    // Valid path, move piece
+    player.pos = end;
+    collapsed[startIdx]=true;
+    movePath=[];
+    // Check if opponent can move
+    if (!canMove(1-turn)) {
+        gameOver=true;
+        winner=player.color;
+        render();
+        updateInfo();
+        return;
+    }
+    turn=1-turn;
+    render();
+    updateInfo();
+}
+
+function cancelMove() {
+    movePath = [];
+    render();
+    updateInfo();
+}
+
+restart();
+</script>
+</body>
+</html>
