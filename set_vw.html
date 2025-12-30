@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            display: flex;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            gap: 1rem;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            padding: 0;
+            margin: 0;
+            font-size: 4.571vw;
+        }
+        .card,
+        .deck-counter::before {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 30vw;
+            height: 14.286vw;
+            border-radius: 2.286vw;
+            box-shadow: 0 0.286vw 0.857vw rgba(0,0,0,0.12), 0 0.286vw 0.571vw rgba(0,0,0,0.24);
+            background-color: white;
+            box-sizing: border-box;
+        }
+        .item {
+            --base-width: 6.857vw;
+            height: 10.857vw;
+            background: var(--color);
+            mask: var(--mask) left top repeat-x;
+        }
+
+        input {
+            display: none;
+        }
+        .item.n1 {
+            width: var(--base-width)
+        }
+        .item.n2 {
+            width: calc(var(--base-width) * 2);
+        }
+        .item.n4 {
+            width: calc(var(--base-width) * 3);
+        }
+        .item.c1 {
+            --color: #e82e34;
+        }
+        .item.c2 {
+            --color: #13a751;
+        }
+        .item.c4 {
+            --color: #3d1e86;
+        }
+        .item.s1.f1 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.225 17.6094c-.658-.235-1.128-.7238-1.128-1.1656 0-.3196.3948-1.1656.799-1.7108.564-.7708.893-1.833.893-2.9234 0-.8178-.1316-1.3348-.7238-2.7636C1.8338 6.0944 1.956 4.0076 3.4224 2.56 4.4188 1.573 5.7724 1.0936 7.314 1.1782c1.1186.0564 1.6826.235 2.2184.7144.3572.3102.3948.3948.4324.8554.0376.4888.0094.5734-.5358 1.504-.752 1.2972-.987 2.0586-.9776 3.102.0094.7144.047.893.4042 1.7202.2162.5076.4512 1.1844.5264 1.504.1692.6956.188 2.5756.0376 3.2806-.3478 1.6168-1.5134 2.914-3.2336 3.6002-.893.3572-2.1996.423-2.961.1504Z" /></svg>');
+        }
+        .item.s2.f1 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5l0 9a3 3 90 01-8 0l0-9a3 3 90 018 0" /></svg>');
+        }
+        .item.s4.f1 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 2 9.5 6 1 10 9.5Z" /></svg>');
+        }
+        .item.s1.f2 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="1.5" d="M3.225 17.6094c-.658-.235-1.128-.7238-1.128-1.1656 0-.3196.3948-1.1656.799-1.7108.564-.7708.893-1.833.893-2.9234 0-.8178-.1316-1.3348-.7238-2.7636C1.8338 6.0944 1.956 4.0076 3.4224 2.56 4.4188 1.573 5.7724 1.0936 7.314 1.1782c1.1186.0564 1.6826.235 2.2184.7144.3572.3102.3948.3948.4324.8554.0376.4888.0094.5734-.5358 1.504-.752 1.2972-.987 2.0586-.9776 3.102.0094.7144.047.893.4042 1.7202.2162.5076.4512 1.1844.5264 1.504.1692.6956.188 2.5756.0376 3.2806-.3478 1.6168-1.5134 2.914-3.2336 3.6002-.893.3572-2.1996.423-2.961.1504Z" /><path d="M3.6504 7.0756 4.8168 4.7428" /><path d="M6.5664 4.7428 3.6504 10.5748" /><path d="M3.6504 14.074 8.316 4.7428" /><path d="M8.316 8.242 5.4 14.074" /><path d="M8.316 11.7412 7.1496 14.074" /></svg>');
+        }
+        .item.s2.f2 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="1.5" d="M10 5l0 9a3 3 90 01-8 0l0-9a3 3 90 018 0" /><path d="M3.6504 7.0756 4.8168 4.7428" /><path d="M6.5664 4.7428 3.6504 10.5748" /><path d="M3.6504 14.074 8.316 4.7428" /><path d="M8.316 8.242 5.4 14.074" /><path d="M8.316 11.7412 7.1496 14.074" /></svg>');
+        }
+        .item.s4.f2 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="1.5" d="M6 18 2 9.5 6 1 10 9.5Z" /><path d="M3.6504 7.0756 4.8168 4.7428" /><path d="M6.5664 4.7428 3.6504 10.5748" /><path d="M3.6504 14.074 8.316 4.7428" /><path d="M8.316 8.242 5.4 14.074" /><path d="M8.316 11.7412 7.1496 14.074" /></svg>');
+        }
+        .item.s1.f4 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.225 17.6094c-.658-.235-1.128-.7238-1.128-1.1656 0-.3196.3948-1.1656.799-1.7108.564-.7708.893-1.833.893-2.9234 0-.8178-.1316-1.3348-.7238-2.7636C1.8338 6.0944 1.956 4.0076 3.4224 2.56 4.4188 1.573 5.7724 1.0936 7.314 1.1782c1.1186.0564 1.6826.235 2.2184.7144.3572.3102.3948.3948.4324.8554.0376.4888.0094.5734-.5358 1.504-.752 1.2972-.987 2.0586-.9776 3.102.0094.7144.047.893.4042 1.7202.2162.5076.4512 1.1844.5264 1.504.1692.6956.188 2.5756.0376 3.2806-.3478 1.6168-1.5134 2.914-3.2336 3.6002-.893.3572-2.1996.423-2.961.1504Z" /></svg>');
+        }
+        .item.s2.f4 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5l0 9a3 3 90 01-8 0l0-9a3 3 90 018 0" /></svg>');
+        }
+        .item.s4.f4 {
+            --mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 19" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 2 9.5 6 1 10 9.5Z" /></svg>');
+        }
+        .btn-set {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 22.857vw;
+            line-height: 13.714vw;
+            cursor: pointer;
+            border: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            font-size: 9.143vw;
+            box-shadow: 0 -0.286vw 0.857vw rgba(0,0,0,0.12), 0 -0.286vw 0.571vw rgba(0,0,0,0.24);
+        }
+        .btn-set::before {
+            content: '⏱️ ' attr(data-count) ' [ SET ! ] ⭐' attr(data-score);
+        }
+        .btn-set ~ .btn-set {
+            bottom: unset;
+            top: 0;
+            transform: rotate(180deg);
+        }
+        .card.checked {
+            box-shadow: 0 0 0 0.857vw rgba(59, 130, 246, 0.5), 0 0.286vw 0.857vw rgba(0,0,0,0.12), 0 0.286vw 0.571vw rgba(0,0,0,0.24);
+        }
+        .card.correct {
+            box-shadow: 0 0 0 0.857vw rgba(34, 197, 94, 0.5), 0 0.286vw 0.857vw rgba(0,0,0,0.12), 0 0.286vw 0.571vw rgba(0,0,0,0.24);
+        }
+        .card.wrong {
+            box-shadow: 0 0 0 0.857vw rgba(239, 68, 68, 0.5), 0 0.286vw 0.857vw rgba(0,0,0,0.12), 0 0.286vw 0.571vw rgba(0,0,0,0.24);
+        }
+        .card.hint {
+            background-color: azure;
+        }
+        .deck-counter {
+            flex-basis: 100%;
+            display: none;
+        }
+        .deck-counter::before {
+            content: attr(data-count);
+            box-sizing: border-box;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0 auto;
+            background-color: #aa97e3;
+            border: 6px solid white;
+        }
+        .btn-set.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        class Table {
+            answerUser;
+
+            constructor(area) {
+                this.area = area;
+                new User(this);
+                new User(this);
+                const deck = new Deck(this);
+                deck.dealCards();
+                deck.counter.onclick = () => {
+                    if (this.answerUser) {
+                        this.score();
+                        deck.dealCards();
+                    }
+                };
+                this.deck = deck;
+            }
+
+            answerCheck(e) {
+                if (table.answerUser) {
+                    const card = e.target.parentElement.parentElement;
+                    const inputs = document.querySelectorAll('input:checked');
+                    const selectedCards = Array.from(inputs).map(input => input.parentElement.parentElement);
+                    const allInputs = document.querySelectorAll('input');
+                    card.classList.toggle('checked', e.target.checked);
+                    allInputs.forEach(input => {
+                        if (!input.checked) {
+                            input.disabled = inputs.length === 3;
+                        }
+                    });
+                    if (inputs.length === 3) {
+                        if (isSet(selectedCards)) {
+                            selectedCards.forEach(card => card.classList.add('correct'));
+                        } else {
+                            selectedCards.forEach(card => card.classList.add('wrong'));
+                        }
+                    } else {
+                        selectedCards.forEach(card => card.classList.remove('correct', 'wrong'));
+                        card.classList.remove('correct', 'wrong');
+                    }
+                } else {
+                    e.target.checked = false;
+                }
+            }
+        }
+        class User {
+            constructor(table) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-set';
+                btn.dataset.score = 0;
+                btn.addEventListener('click', () => {
+                    if (!table.answerUser) {
+                        table.answerUser = btn;
+                        btn.classList.add('active');
+                    } else if (table.answerUser === btn) {
+                        score();
+                        btn.classList.remove('active');
+                        table.answerUser = null;
+                        table.deck.dealCards();
+                    }
+                });
+                table.area.appendChild(btn);
+            }
+        }
+        class Deck {
+            constructor(table) {
+                this.table = table;
+                const deck = [];
+                const attributes = ['c', 's', 'f', 'n'];
+                const values = [1, 2, 4];
+
+                for (let c = 1; c <= 4; c += c) {
+                    for (let s = 1; s <= 4; s += s) {
+                        for (let f = 1; f <= 4; f += f) {
+                            for (let n = 1; n <= 4; n += n) {
+                                const card = document.createElement('label');
+                                const item = document.createElement('div');
+                                const input = document.createElement('input');
+                                input.type = 'checkbox';
+                                input.addEventListener('input', table.answerCheck);
+                                item.className = `item c${c} s${s} f${f} n${n}`;
+                                card.className = 'card';
+                                card.dataset.c = c;
+                                card.dataset.s = s;
+                                card.dataset.f = f;
+                                card.dataset.n = n;
+                                item.appendChild(input);
+                                card.appendChild(item);
+                                deck.push(card);
+                            }
+                        }
+                    }
+                }
+                shuffle(deck);
+                this.cards = deck;
+
+                const counter = document.createElement('div');
+                counter.className = 'deck-counter';
+                table.area.appendChild(counter);
+                this.counter = counter;
+            }
+
+            dealCards() {
+                while (this.cards.length > 0 && document.querySelectorAll('.card').length < 12) {
+                    this.table.area.appendChild(this.cards.shift());
+                }
+
+                while (!isSet(document.querySelectorAll('.card'))) {
+                    if (this.cards.length > 0) {
+                        for (let i = 0; i < 3; i++) {
+                            this.table.area.appendChild(this.cards.shift());
+                        }
+                    } else {
+                        alert('沒有可組合的牌了');
+                        break;
+                    }
+                }
+                const users = document.querySelectorAll('.btn-set');
+                users.forEach(user => user.dataset.count = this.cards.length / 3);
+                // this.counter.dataset.count = this.cards.length;
+            }
+        }
+
+        const table = new Table(document.body);
+
+
+        function score() {
+            if (table.answerUser) {
+                const allInputs = document.querySelectorAll('input');
+                const correct_cards = document.querySelectorAll('.card.correct');
+                const checked_cards = document.querySelectorAll('.card.checked')
+
+                if (correct_cards.length === 3) {
+                    correct_cards.forEach(card => card.classList.remove('correct'));
+                    table.answerUser.dataset.score++;
+                    if (allInputs.length > 12 || table.deck.cards.length == 0) {
+                        correct_cards.forEach(card => document.body.removeChild(card));
+                    } else {
+                        correct_cards.forEach(card => document.body.replaceChild(table.deck.cards.shift(), card));
+                    }
+                } else {
+                    checked_cards.forEach(card => card.classList.remove('wrong', 'checked'));
+                    if (parseInt(table.answerUser.dataset.score) > 0) {
+                        table.answerUser.dataset.score--;
+                    }
+                }
+                allInputs.forEach(input => {
+                    input.checked = false;
+                    input.disabled = false;
+                });
+            }
+        }
+
+        function isSet(cards) {
+            for (let i = 0; i < cards.length - 2; i++) {
+                for (let j = i + 1; j < cards.length - 1; j++) {
+                    for (let k = j + 1; k < cards.length; k++) {
+                        const card1 = cards[i];
+                        const card2 = cards[j];
+                        const card3 = cards[k];
+
+                        if (isMatching(card1, card2, card3)) {
+                            // card1.classList.add('hint');
+                            // card2.classList.add('hint');
+                            // card3.classList.add('hint');
+
+                            return true; // 找到一組完全匹配的組合
+                        }
+                    }
+                }
+            }
+            return false; // 沒有找到完全匹配的組合
+        }
+
+        function isMatching(card1, card2, card3) {
+            const attributes = ['c', 's', 'f', 'n'];
+
+            return attributes.every(attr => {
+                const values = [card1.dataset[attr], card2.dataset[attr], card3.dataset[attr]];
+                const uniqueValues = new Set(values);
+                return uniqueValues.size === 1 || uniqueValues.size === 3; // 全相等或全不相等
+            });
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
+</body>
+</html>
