@@ -22,9 +22,12 @@
             padding: 0;
             margin: 0;
             font-size: 4.571vw;
+            user-select: none;           /* 禁止文字選取 */
+            -webkit-user-select: none;
+            -webkit-touch-callout: none; /* 禁止 iOS 長按選單 */
+            touch-action: none;          /* 禁止瀏覽器預設的捲動/縮放處理 */
         }
-        .card,
-        .deck-counter::before {
+        .card {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -46,7 +49,7 @@
             display: none;
         }
         .item.n1 {
-            width: var(--base-width)
+            width: var(--base-width);
         }
         .item.n2 {
             width: calc(var(--base-width) * 2);
@@ -103,6 +106,7 @@
             background-color: white;
             font-size: 9.143vw;
             box-shadow: 0 -0.286vw 0.857vw rgba(0,0,0,0.12), 0 -0.286vw 0.571vw rgba(0,0,0,0.24);
+            z-index: 1;
         }
         .btn-set::before {
             content: '⏱️ ' attr(data-count) ' [ SET ! ] ⭐' attr(data-score);
@@ -124,22 +128,17 @@
         .card.hint {
             background-color: azure;
         }
-        .deck-counter {
-            flex-basis: 100%;
-            display: none;
-        }
-        .deck-counter::before {
-            content: attr(data-count);
-            box-sizing: border-box;
-            font-size: 1.5rem;
-            color: white;
-            margin: 0 auto;
-            background-color: #aa97e3;
-            border: 6px solid white;
-        }
         .btn-set.active {
             background-color: #3b82f6;
             color: white;
+        }
+        body.score .btn-set {
+            transition: 1s;
+            height: 50vh;
+            font-size: 10vh;
+        }
+        body.score .btn-set::before {
+            content: '⭐' attr(data-score);
         }
     </style>
 </head>
@@ -154,12 +153,6 @@
                 new User(this);
                 const deck = new Deck(this);
                 deck.dealCards();
-                deck.counter.onclick = () => {
-                    if (this.answerUser) {
-                        this.score();
-                        deck.dealCards();
-                    }
-                };
                 this.deck = deck;
             }
 
@@ -213,8 +206,6 @@
             constructor(table) {
                 this.table = table;
                 const deck = [];
-                const attributes = ['c', 's', 'f', 'n'];
-                const values = [1, 2, 4];
 
                 for (let c = 1; c <= 4; c += c) {
                     for (let s = 1; s <= 4; s += s) {
@@ -240,11 +231,6 @@
                 }
                 shuffle(deck);
                 this.cards = deck;
-
-                const counter = document.createElement('div');
-                counter.className = 'deck-counter';
-                table.area.appendChild(counter);
-                this.counter = counter;
             }
 
             dealCards() {
@@ -258,18 +244,42 @@
                             this.table.area.appendChild(this.cards.shift());
                         }
                     } else {
-                        alert('沒有可組合的牌了');
+                        document.body.classList.add('score');
                         break;
                     }
                 }
                 const users = document.querySelectorAll('.btn-set');
                 users.forEach(user => user.dataset.count = this.cards.length / 3);
-                // this.counter.dataset.count = this.cards.length;
             }
         }
 
         const table = new Table(document.body);
 
+        let hintTimer;
+        const hintHoldTime = 6000;
+        const hintTriggerArea = document.body.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+            clearTimeout(hintTimer);
+            hintTimer = setTimeout(() => {
+                const cards = document.querySelectorAll('.card');
+                isSet(cards, true);
+            }, hintHoldTime);
+
+            document.body.setPointerCapture(e.pointerId);
+        });
+        const cancelHintHandler = () => {
+            if (hintTimer) {
+                clearTimeout(hintTimer);
+            }
+        };
+        document.body.addEventListener('pointerup', cancelHintHandler);
+        document.body.addEventListener('pointercancel', cancelHintHandler); // 系統中斷（如跳出視窗）
+        document.body.addEventListener('pointerleave', cancelHintHandler); // 游標移出元素範圍
+
+        document.body.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // 禁用右鍵/長按選單，確保長按不被中斷
+        });
 
         function score() {
             if (table.answerUser) {
@@ -298,7 +308,7 @@
             }
         }
 
-        function isSet(cards) {
+        function isSet(cards, hint = false) {
             for (let i = 0; i < cards.length - 2; i++) {
                 for (let j = i + 1; j < cards.length - 1; j++) {
                     for (let k = j + 1; k < cards.length; k++) {
@@ -307,9 +317,11 @@
                         const card3 = cards[k];
 
                         if (isMatching(card1, card2, card3)) {
-                            // card1.classList.add('hint');
-                            // card2.classList.add('hint');
-                            // card3.classList.add('hint');
+                            if (hint) {
+                                card1.classList.add('hint');
+                                card2.classList.add('hint');
+                                card3.classList.add('hint');
+                            }
 
                             return true; // 找到一組完全匹配的組合
                         }
