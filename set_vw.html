@@ -134,8 +134,8 @@
         }
         body.score .btn-set {
             transition: 1s;
-            height: 50vh;
-            font-size: 10vh;
+            height: 50dvh;
+            font-size: 13dvh;
         }
         body.score .btn-set::before {
             content: '⭐' attr(data-score);
@@ -256,7 +256,7 @@
         const table = new Table(document.body);
 
         let hintTimer;
-        const hintHoldTime = 6000;
+        const hintHoldTime = 5000;
         const hintTriggerArea = document.body.addEventListener('pointerdown', (e) => {
             if (e.pointerType === 'mouse' && e.button !== 0) return;
 
